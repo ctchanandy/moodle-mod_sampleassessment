@@ -1683,7 +1683,8 @@ function sampleassessment_scale_used ($sampleassessmentid,$scaleid) {
  * @return boolean True if the scale is used by any assessment
  */
 function sampleassessment_scale_used_anywhere($scaleid) {
-    if ($scaleid and record_exists('assessment', 'grade', -$scaleid)) {
+    global $DB;
+    if ($scaleid and $DB->record_exists('sampleassessment', array('grade'=>-$scaleid))) {
         return true;
     } else {
         return false;
