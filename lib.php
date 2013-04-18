@@ -170,7 +170,7 @@ class sampleassessment_base {
             if ($allgradeids = $DB->get_records_select('sampleassessment_grades', 'submissionid '.$in_sql1, $in_params1)) {
                 $allgradeids = array_keys($allgradeids);
                 list($in_sql2, $in_params2) = $DB->get_in_or_equal($allgradeids, SQL_PARAMS_NAMED);
-                $deletegradespec = $DB->delete_records_select('sampleassessmentgrade_specs', 'gradeid '.$in_sql2, $in_params2);
+                $deletegradespec = $DB->delete_records_select('sampleassessment_grade_specs', 'gradeid '.$in_sql2, $in_params2);
             }
             $deletegrades = $DB->delete_records_select('sampleassessment_grades', 'submissionid '.$in_sql1, $in_params1);
         }
@@ -467,7 +467,7 @@ class sampleassessment_base {
                             }
                             $$sample_grade_name = $OUTPUT->action_link($popup_url.'&amp;submissionid='.$submission_ids[$i].'&amp;type=1', $$sample_grade_name, 
                                                   new popup_action('click', $popup_url.'&amp;submissionid='.$submission_ids[$i].'&amp;type=1', 'grade_'.$auser->id.'_'.$i, array('height' => $popup_height, 'width' => $popup_width)), 
-                                                  array('title'=>$$sample_grade_name));
+                                                  array('title'=>$$sample_grade_name, 'target'=>'_blank'));
                         }
                         
                         $userlink = fullname($auser);
@@ -670,7 +670,7 @@ class sampleassessment_base {
             $link_to_grade = $OUTPUT->action_link($popup_url.'&amp;marker='.$markerid.'&amp;submissionid='.$submission->id.'&amp;type='.$type, $linktext, 
                                                   new popup_action('click', $popup_url.'&amp;marker='.$markerid.'&amp;submissionid='.$submission->id.'&amp;type='.$type, 
                                                   'grade_'.$USER->id.'_'.$counter, array('height' => $popup_height, 'width' => $popup_width)), 
-                                                  array('title'=>$linktext));
+                                                  array('title'=>$linktext, 'target'=>'_blank'));
             $samples_div .= html_writer::start_tag('tr');
             $samples_div .= html_writer::tag('th', $assessment_grade_label.':');
             $samples_div .= html_writer::tag('td', $model_assessment.' ('.$link_to_grade.')');
