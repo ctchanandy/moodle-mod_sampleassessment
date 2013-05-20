@@ -69,6 +69,7 @@ class mod_sampleassessment_mod_form extends moodleform_mod {
         $mform->addElement('select', 'numsubmission', get_string('submissionfilesnum', 'sampleassessment'), $submissionfilesoptions, $attributes);
         $mform->addElement('date_time_selector', 'gradestart', get_string('start', 'sampleassessment'));
         $mform->addElement('date_time_selector', 'gradeend', get_string('end', 'sampleassessment'));
+        $mform->setDefault('gradeend', time()+7*24*3600);
         $mform->addElement('date_time_selector', 'gradepublish', get_string('publish', 'sampleassessment'));
         $mform->addElement('checkbox', 'autoshowcomment', get_string('autoshowcomment', 'sampleassessment'), get_string('autoshowcommenttext', 'sampleassessment'));
 

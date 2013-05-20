@@ -156,6 +156,7 @@ $string['close'] = 'Close';
 $string['deletegrade'] = 'Delete model assessment';
 $string['confirmdeletegrade'] = 'Do you really want to delete this model assessment?';
 $string['gradedate'] = 'Date Graded';
+$string['studentaveragegrade'] = 'Student Average Grade';
 
 $string['sampleassessment:grade'] = 'Grade';
 $string['sampleassessment:submit'] = 'Submit';

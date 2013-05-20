@@ -608,7 +608,7 @@ class sampleassessment_base {
     }
    
     function view_samples($role) {
-        global $CFG, $OUTPUT, $USER;
+        global $CFG, $OUTPUT, $USER, $DB;
         
         $sampleassessment = $this->sampleassessment;
         $submissions = $sampleassessment->submissions;
@@ -675,6 +675,21 @@ class sampleassessment_base {
             $samples_div .= html_writer::tag('th', $assessment_grade_label.':');
             $samples_div .= html_writer::tag('td', $model_assessment.' ('.$link_to_grade.')');
             $samples_div .= html_writer::end_tag('tr');
+            
+            // Average of grades by students
+            if ($role == 'teacher') {
+                $average_grade_sql = 'SELECT AVG(grade) FROM {sampleassessment_grades} WHERE type = 1 AND submissionid = ?';
+                $average_grade = $DB->get_field_sql($average_grade_sql, array($submission->id));
+                if ($average_grade) {
+                    $average_grade = $this->display_grade(round($average_grade, 2));
+                } else {
+                    $average_grade = 'N/A';
+                }
+                $samples_div .= html_writer::start_tag('tr');
+                $samples_div .= html_writer::tag('th', get_string('studentaveragegrade', 'sampleassessment').':');
+                $samples_div .= html_writer::tag('td', $average_grade);
+                $samples_div .= html_writer::end_tag('tr');
+            }
             
             $samples_div .= html_writer::end_tag('table');
             $samples_div .= html_writer::end_tag('div');
