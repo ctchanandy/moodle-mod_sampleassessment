@@ -678,10 +678,10 @@ class sampleassessment_base {
             
             // Average of grades by students
             if ($role == 'teacher') {
-                $average_grade_sql = 'SELECT AVG(grade) FROM {sampleassessment_grades} WHERE type = 1 AND submissionid = ?';
-                $average_grade = $DB->get_field_sql($average_grade_sql, array($submission->id));
+                $average_grade_sql = 'SELECT AVG(grade) AS agrade, COUNT(*) AS num FROM {sampleassessment_grades} WHERE type = 1 AND submissionid = ?';
+                $average_grade = $DB->get_record_sql($average_grade_sql, array($submission->id));
                 if ($average_grade) {
-                    $average_grade = $this->display_grade(round($average_grade, 2));
+                    $average_grade = $this->display_grade(round($average_grade->agrade, 2)).' ('.get_string('numstudentgraded', 'sampleassessment', $average_grade->num).')';
                 } else {
                     $average_grade = 'N/A';
                 }

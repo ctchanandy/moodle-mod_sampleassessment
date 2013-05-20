@@ -156,6 +156,7 @@ $string['deletegrade'] = '刪除標準評估';
 $string['confirmdeletegrade'] = '你確認要刪除這個標準評估嗎？';
 $string['gradedate'] = '評估日期';
 $string['studentaveragegrade'] = '學生平均評分';
+$string['numstudentgraded'] = '由 {$a} 位學生';
 
 $string['sampleassessment:grade'] = '評分';
 $string['sampleassessment:submit'] = '提交';
