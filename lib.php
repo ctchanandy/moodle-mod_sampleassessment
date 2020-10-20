@@ -50,7 +50,7 @@ class sampleassessment_base {
     /**
     * Constructor
     */
-    function sampleassessment_base($cmid='staticonly', $sampleassessment=NULL, $cm=NULL, $course=NULL) {
+    function __construct($cmid='staticonly', $sampleassessment=NULL, $cm=NULL, $course=NULL) {
         global $COURSE, $DB;
         
         if ($cmid == 'staticonly') {
@@ -64,7 +64,7 @@ class sampleassessment_base {
             print_error('errorincorrectcmid', 'sampleassessment');
         }
         
-        $this->context = get_context_instance(CONTEXT_MODULE, $this->cm->id);
+        $this->context = context_module::instance($this->cm->id);
         
         if ($course) {
             $this->course = $course;
@@ -93,7 +93,7 @@ class sampleassessment_base {
 
         $this->sampleassessment->submissions = $this->get_sample_submissions();
         
-        if ($this->usehtmleditor = can_use_html_editor()) {
+        if ($this->usehtmleditor) {
             $this->defaultformat = FORMAT_HTML;
         } else {
             $this->defaultformat = FORMAT_MOODLE;
@@ -122,7 +122,7 @@ class sampleassessment_base {
         global $DB;
         $cm = $DB->get_record("course_modules", array("id"=>$sampleassessment->coursemodule));
         $course = $DB->get_record("course", array("id"=>$cm->course));
-        $context = get_context_instance(CONTEXT_MODULE, $cm->id);
+        $context = context_module::instance($cm->id);
         if ($numsubmission = $sampleassessment->numsubmission) {
             for ($i=$count; $i<=$numsubmission; $i++) {
                 // insert record to sampleassessment_submissions
@@ -192,7 +192,7 @@ class sampleassessment_base {
         // now get rid of all files
         $fs = get_file_storage();
         if ($cm = get_coursemodule_from_instance('sampleassessment', $sampleassessment->id)) {
-            $context = get_context_instance(CONTEXT_MODULE, $this->cm->id);
+            $context = context_module::instance($this->cm->id);
             $fs->delete_area_files($context->id);
         }
    }
@@ -202,7 +202,7 @@ class sampleassessment_base {
         
         $cm = $DB->get_record("course_modules", array("id"=>$sampleassessment->coursemodule));
         $course = $DB->get_record("course", array("id"=>$cm->course));
-        $context = get_context_instance(CONTEXT_MODULE, $cm->id);
+        $context = context_module::instance($cm->id);
         
         $sampleassessment->timemodified = time();
         $sampleassessment->id = $sampleassessment->instance;
@@ -223,13 +223,13 @@ class sampleassessment_base {
         for ($i=1; $i<=$numsubmission; $i++) {
             if (!empty($oldsubmissionsid)) {
                 $submission = $this->update_sample_submission($sampleassessment, array_shift($oldsubmissionsid), $i);
-                $overwrite = true;
             } else {
                 $submission = $this->add_sample_submission($sampleassessment, $i);
-                $overwrite = false;
             }
             if ($filename = $mform->get_new_filename('samplefile'.$i)) {
-                $file = $mform->save_stored_file('samplefile'.$i, $context->id, 'mod_sampleassessment', 'samplefile', $submission->id, '/', $filename, $overwrite);
+                $fs = get_file_storage();
+                $fs->delete_area_files($context->id, 'mod_sampleassessment', 'samplefile', $submission->id);
+                $file = $mform->save_stored_file('samplefile'.$i, $context->id, 'mod_sampleassessment', 'samplefile', $submission->id, '/', $filename);
             }
         }
         // delete old samples if the number of samples decrease
@@ -285,14 +285,12 @@ class sampleassessment_base {
         $sampleassessment = $this->sampleassessment;
         $cm = $this->cm;
         
-        $context = get_context_instance(CONTEXT_MODULE,$cm->id);
+        $context = context_module::instance($cm->id);
         require_capability('mod/sampleassessment:view', $context);
-        
-        add_to_log($course->id, "sampleassessment", "view", "view.php?id={$cm->id}",$sampleassessment->name, $cm->id);
         
         $this->view_header();
         
-        $course_context = get_context_instance(CONTEXT_COURSE, $course->id);
+        $course_context = context_course::instance($course->id);
         if (has_capability('gradereport/grader:view', $course_context) && has_capability('moodle/grade:viewall', $course_context)) {
             echo '<div class="allcoursegrades"><a href="' . $CFG->wwwroot . '/grade/report/grader/index.php?id=' . $course->id . '">'
                  . get_string('seeallcoursegrades', 'grades') . '</a></div>';
@@ -389,9 +387,18 @@ class sampleassessment_base {
                 
                 $tablecolumns[] = 'fullname';
                 $tableheaders[] = get_string('fullname');
+                $alphabets = array('A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z');
                 
                 for ($i=0; $i<$samplescount; $i++) {
-                    $tableheaders[] = get_string('sample', 'sampleassessment').' '.($i+1);
+                    $samplelabel = $sampleassessment->samplelabel;
+                    if (strpos($samplelabel, "#")) {
+                        $samplelabel = str_replace("#", $i+1, $samplelabel);
+                    } else if (strpos($samplelabel, "@")) {
+                        $samplelabel = str_replace("@", $alphabets[$i+1], $samplelabel);
+                    } else {
+                        $samplelabel = $samplelabel.' '.($i+1);
+                    }
+                    $tableheaders[] = $samplelabel;
                     $tablecolumns[] = 'grade'.$i;
                 }
                 
@@ -434,7 +441,8 @@ class sampleassessment_base {
                 $submission_ids = array_keys($submissions);
                 
                 // Get student assessment on samples first, return user name even there is no assessment
-                $select = "SELECT u.id, u.firstname, u.lastname, 
+                $more_names = "u.lastnamephonetic, u.firstnamephonetic, u.middlename, u.alternatename, ";
+                $select = "SELECT u.id, u.firstname, u.lastname, $more_names
                            (SELECT data FROM {user_info_data} WHERE userid = u.id AND fieldid = 
                                (SELECT id FROM {user_info_field} WHERE shortname = 'chiname')
                            ) as chiname ";
@@ -629,12 +637,22 @@ class sampleassessment_base {
         $tabs_list = html_writer::start_tag('ul');
         $samples_div = html_writer::start_tag('div');
         
+        $alphabets = array('A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z');
+        
         foreach ($submissions as $submission) {
             $counter++;
             $tab_selected = ($counter == 1) ? 'selected' : '';
             $file = sampleassessment_display_sample_files($submission, $sampleassessment);
             $tabs_list .= html_writer::start_tag('li', array('class'=>$tab_selected));
-            $tabs_list .= html_writer::link('#tab'.$counter, html_writer::tag('em', get_string('sample', 'sampleassessment').' '.$counter));
+            $samplelabel = $sampleassessment->samplelabel;
+            if (strpos($samplelabel, "#")) {
+                $samplelabel = str_replace("#", $counter, $samplelabel);
+            } else if (strpos($samplelabel, "@")) {
+                $samplelabel = str_replace("@", $alphabets[$counter], $samplelabel);
+            } else {
+                $samplelabel = $samplelabel.' '.$counter;
+            }
+            $tabs_list .= html_writer::link('#tab'.$counter, html_writer::tag('span', $samplelabel));
             $tabs_list .= html_writer::end_tag('li');
             
             $samples_div .= html_writer::start_tag('div', array('id'=>'tab'.$counter));
@@ -709,69 +727,26 @@ class sampleassessment_base {
         $gradeend = $sampleassessment->gradeend;
         $gradepublish = $sampleassessment->gradepublish;
         
-        $startendcolor = '<span class="calendarkey startendcolor">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>';
-        $publishcolor = '<span class="calendarkey publishcolor">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>';
+        echo $OUTPUT->heading(get_string('submissiondate', 'sampleassessment'), 2, 'main teacherviewheading');
+        echo $OUTPUT->box_start();
         
-        $OUTPUT->box_start();
-        echo '<table id="viewsampledatetable" width="100%">';
-        echo '<tr><td class="c0">'.get_string('start','assessment').':</td>';
-        echo '<td class="c1">'.$startendcolor.(!empty($gradestart) ? userdate($gradestart) : $na).'</td>';
-        echo '<td rowspan="3"><div id="sampledatecalendar"></div></td></tr>';
-        echo '<tr><td class="c0">'.get_string('end','assessment').':</td>';
-        echo '<td class="c1">'.$startendcolor.(!empty($gradeend) ? userdate($gradeend) : $na).'</td></tr>';
-        echo '<tr><td class="c0" style="vertical-align:top;">'.get_string('publish','assessment').':</td>';
-        echo '<td class="c1" style="vertical-align:top;">'.$publishcolor.(!empty($gradepublish) ? userdate($gradepublish) : $na).'</td></tr>';
-        echo '</table>';
-        $OUTPUT->box_end();
-        
-        echo '<script type="text/javascript">
-              YUI().use("calendar", function(Y)
-              {   
-                  var rules = {
-                      "'.date("Y", $gradestart).'": {
-                          "'.(date("n", $gradestart)-1).'": {
-                              "'.date("j", $gradestart).'": {
-                                  "all": "gradestart"
-                              }
-                         }
-                      },
-                      "'.date("Y", $gradeend).'": {
-                          "'.(date("n", $gradeend)-1).'": {
-                              "'.date("j", $gradeend).'": {
-                                  "all": "gradeend"
-                              }
-                         }
-                      },
-                      "'.date("Y", $gradepublish).'": {
-                          "'.(date("n", $gradepublish)-1).'": {
-                              "'.date("j", $gradepublish).'": {
-                                  "all": "gradepublish"
-                              }
-                         }
-                      }
-                  };
-                  var filterFunction = function (date, node, rules) {
-                      if (rules.indexOf("gradestart" >= 0)) {
-                          node.addClass("gradestart_date");
-                      }
-                      if (rules.indexOf("gradeend" >= 0)) {
-                          node.addClass("gradeend_date");
-                      }
-                      if (rules.indexOf("gradepublish" >= 0)) {
-                          node.addClass("gradepublish_date");
-                      }
-                  }
-                  var calendar = new Y.Calendar({
-                      contentBox: "#sampledatecalendar",
-                      width: "250px",
-                      showPrevMonth: true,
-                      showNextMonth: true,
-                      date: new Date('.date("Y").','.(date("n")-1).','.date("j").')
-                  });
-                  calendar.set("customRenderer", {rules: rules, filterFunction: filterFunction});
-                  calendar.render();
-              });
-              </script>';
+        // Change to tabular format and use date() instead of userdate();
+        $HTMLstr = '<table id="viewdatetable">';
+        $HTMLstr .= '<tr>
+                        <td class="c0">&nbsp;</td>
+                        <td class="c1">'.get_string('start','sampleassessment').'</td>
+                        <td class="c1">'.get_string('end','sampleassessment').'</td>
+                        <td class="c1">'.get_string('publish','sampleassessment').'</td>
+                    </tr>';
+        $HTMLstr .= '<tr id="submitdate_tr">
+                        <td class="c0">'.get_string('submission','sampleassessment').'</td>
+                        <td>'.(!empty($gradestart) ? userdate($gradestart) : $notset).'</td>
+                        <td>'.(!empty($gradeend) ? userdate($gradeend) : $notset).'</td>
+                        <td>'.(!empty($gradepublish) ? userdate($gradepublish) : $notset).'</td>
+                    </tr>';
+        $HTMLstr .= '</table>';
+        echo $HTMLstr;
+        echo $OUTPUT->box_end();
     }
     
     function view_footer() {
@@ -916,7 +891,7 @@ class sampleassessment_base {
         $course = $this->course;
         $sampleassessment = $this->sampleassessment;
         $cm = $this->cm;
-        $context = get_context_instance(CONTEXT_MODULE, $cm->id);
+        $context = context_module::instance($cm->id);
         $status = $this->get_sampleassessment_status();
         
         //if (has_capability('mod/sampleassessment:teachergrade', $context) && !has_capability('mod/sampleassessment:submit', $context)) {
@@ -1041,7 +1016,7 @@ class sampleassessment_base {
         $PAGE->set_title(get_string('sampleassessment', 'sampleassessment').': '.fullname($marker).': '.format_string($this->sampleassessment->name));
         echo $OUTPUT->header();
         
-        echo "<div style='width:100%; margin-bottom: 20px;'>";
+        echo "<div style='width:100%; margin-bottom: 10px;'>";
         echo "<table width='100%' id='mod-sampleassessment-activitydetailtable' border='0' cellspacing='0' cellpadding='2'>";
         
         if ($submission = $this->get_submission($submissionid)) {
@@ -1283,6 +1258,10 @@ class sampleassessment_base {
          echo html_writer::empty_tag('br');
          echo $OUTPUT->box_end();
       } else {
+         echo html_writer::start_tag('div', array('class'=>'commentmode'));
+         echo html_writer::tag('strong', get_string('comment', 'sampleassessment'));
+         echo html_writer::end_tag('div');
+         
          echo $OUTPUT->box_start('generalbox', 'div_view_comment');
          echo (trim($sampleassessment_grade->comment) == '' ? 'N/A': format_text($sampleassessment_grade->comment, FORMAT_HTML));
          echo html_writer::empty_tag('br');
@@ -1432,6 +1411,11 @@ class sampleassessment_base {
         }
         
         if ($sampleassessment_grade) {
+            if ($sampleassessment_grade->timemodified == '')
+                $log_action = 'add';
+            else
+                $log_action = 'update';
+            
             $sampleassessment_grade->marker = $USER->id;
             $sampleassessment_grade->userid = 0;
             $sampleassessment_grade->grade = $feedback->grade;
@@ -1452,9 +1436,22 @@ class sampleassessment_base {
                $samplename = $submission->title;
             }
             
+            $event_array = array(
+                'objectid' => $this->sampleassessment->id,
+                'courseid' => $this->course->id,
+                'context' => context_module::instance($this->cm->id),
+                'other' => array('samplename'=>$samplename, 'submissionid'=>$feedback->submissionid, 'type'=>$type)
+            );
+            if ($log_action == 'add') $event = \mod_sampleassessment\event\sample_grade_added::create($event_array);
+            if ($log_action == 'update') $event = \mod_sampleassessment\event\sample_grade_updated::create($event_array);
+            $event->add_record_snapshot('sampleassessment_grades', $sampleassessment_grade);
+            $event->trigger();
+            
+            /*
             add_to_log($this->course->id, 'sampleassessment', 'update grade',
                      'assessment_grades.php?id='.$this->sampleassessment->id.'&submissionid='.$feedback->submissionid.'&marker='.$feedback->marker.'&mode=single&offset=&type='.$type, 
                      $this->sampleassessment->name.': '.$samplename, $this->cm->id);
+            */
         }
         return $sampleassessment_grade;
    }
@@ -1503,7 +1500,7 @@ function sampleassessment_count_graded($sampleassessment) {
     global $CFG, $DB;
     
     $cm = get_coursemodule_from_instance('sampleassessment', $sampleassessment->id);
-    $context = get_context_instance(CONTEXT_MODULE, $cm->id);
+    $context = context_module::instance($cm->id);
 
     // this is all the users with this capability set, in this context or higher
     if ($sampleassessment->submissions) {
@@ -1524,7 +1521,7 @@ function sampleassessment_display_sample_files($submission, $sampleassessment, $
     global $CFG;
     
     $cm = get_coursemodule_from_instance('sampleassessment', $sampleassessment->id);
-    $context = get_context_instance(CONTEXT_MODULE, $cm->id);
+    $context = context_module::instance($cm->id);
     
     $countfiles = '';
     $fs = get_file_storage();

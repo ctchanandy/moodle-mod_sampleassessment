@@ -1,8 +1,11 @@
 <?php
-
+$string['sampleassessment:addinstance'] = 'Add a sample assessment instance';
 $string['sampleassessment'] = 'Sample Assessment';
 $string['modulename'] = 'Sample Assessment';
 $string['modulenameplural'] = 'Sample Assessments';
+$string['modulename_help'] = 'The Sample Assessment activity module enables participants to assess sample submissions (text, files or links) uploaded by teacher using rubric.
+
+Teacher can also pre-set a model grade so that students can compare it to their own assessment.';
 $string['pluginname'] = 'Sample Assessment';
 $string['pluginadministration'] = 'Sample Assessments administration';
 
@@ -10,6 +13,7 @@ $string['sample'] = 'Sample';
 $string['sampleupload'] = 'Upload Samples';
 $string['samplename'] = 'Samples Name';
 $string['sampleintro'] = 'Samples Description';
+$string['samplelabel'] = 'Samples Label';
 
 $string['assessmentfieldset'] = 'Types of assessment';
 $string['assessmentintro'] = 'Assessment Intro';

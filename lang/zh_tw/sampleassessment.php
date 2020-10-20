@@ -3,6 +3,9 @@
 $string['sampleassessment'] = '範例評估';
 $string['modulename'] = '範例評估';
 $string['modulenameplural'] = '範例評估';
+$string['modulename_help'] = '範例評估活動可讓老師上載一些範例作品(文字、檔案或連結皆可)讓同學使用評估量表(rubric)評估。
+
+老師更可以預先設定一個模範評級，同學評估完後便可以比較自己的評級是否準確。';
 $string['pluginname'] = '範例評估';
 $string['pluginadministration'] = '範例評估管理';
 
@@ -10,6 +13,7 @@ $string['sample'] = '範例';
 $string['sampleupload'] = '上載範例';
 $string['samplename'] = '範例名稱';
 $string['sampleintro'] = '範例簡介';
+$string['samplelabel'] = '範例標籤';
 
 $string['assessmentfieldset'] = '評估類別';
 $string['assessmentintro'] = '評估簡介';

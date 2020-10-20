@@ -179,7 +179,7 @@
 }
 
 #mod-sampleassessment-activitydetailtable th {
-   width:12%;
+   width:15%;
    font-size: 1.0em;
    font-weight:bold;
    text-align:right;
@@ -241,6 +241,7 @@ div.fullname {
 
 div.commentmode {
    font-size: 1.1em;
+   margin-bottom: 10px;
 }
 
 #mod-sampleassessment-assessment_grades div.grade {
@@ -307,6 +308,14 @@ span.modelgrade {
    background-color: #FFCCCC;
 }
 
+#page-mod-sampleassessment-view td.gradeperiod_date {
+   background-color: #CCFF99;
+}
+
+#page-mod-sampleassessment-view td.gradepublish_date {
+   background-color: #FFCCCC;
+}
+
 #rubric td.modelbg {background-color: #FFCCCC;}
 
 #rubric td.overlapbg {background-color: #CC99FF;}
@@ -329,4 +338,18 @@ span.modelgrade {
 
 #modelcomment {
     background-color: #FFCCCC;
+}
+
+#page-mod-sampleassessment-assessment_grades header#page-header {
+    height: 0;
+    margin-top: 0;
+    border-bottom: 0;
+}
+
+#page-mod-sampleassessment-assessment_grades div#page {
+    padding-top: 0;
+}
+
+.yui3-skin-sam #samples .yui3-tab-label {
+    font-size: 90%;
 }

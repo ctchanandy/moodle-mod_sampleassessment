@@ -36,7 +36,14 @@
     require_course_login($course);
     $PAGE->set_pagelayout('incourse');
     
-    add_to_log($course->id, "sampleassessment", "view all", "index.php?id=".$course->id, "");
+    $params = array(
+        'context' => context_course::instance($id)
+    );
+    $event = \mod_sampleassessment\event\course_module_instances_list_viewed::create($params);
+    $event->add_record_snapshot('course', $course);
+    $event->trigger();
+    
+    //add_to_log($course->id, "sampleassessment", "view all", "index.php?id=".$course->id, "");
     
     $url = new moodle_url('/mod/sampleassessment/index.php', array('id'=>$id));
     

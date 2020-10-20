@@ -62,12 +62,21 @@ $PAGE->set_pagelayout('incourse');
 
 require_course_login($course, true, $cm);
 
-$context = get_context_instance(CONTEXT_MODULE, $cm->id);
+$context = context_module::instance($cm->id);
 $PAGE->set_context($context);
 
 /// Print the page header
 $strsampleassessments = get_string("modulenameplural", "sampleassessment");
 $strsampleassessment = get_string("modulename", "sampleassessment");
+
+$eventdata = array();
+$eventdata['objectid'] = $sampleassessment->id;
+$eventdata['context'] = $context;
+
+$event = \mod_sampleassessment\event\course_module_viewed::create($eventdata);
+$event->add_record_snapshot('course_modules', $cm);
+$event->add_record_snapshot('course', $course);
+$event->trigger();
 
 /// Print the main part of the page
 $sampleassessmentinstance = new sampleassessment_base($cm->id, $sampleassessment, $cm, $course);

@@ -29,8 +29,6 @@ defined('MOODLE_INTERNAL') || die();
 $logs = array(
     array('module'=>'sampleassessment', 'action'=>'view', 'mtable'=>'sampleassessment', 'field'=>'name'),
     array('module'=>'sampleassessment', 'action'=>'view all', 'mtable'=>'course', 'field'=>'shortname'),
-    array('module'=>'sampleassessment', 'action'=>'view rubric', 'mtable'=>'assessment_rubrics', 'field'=>'name'),
-    array('module'=>'sampleassessment', 'action'=>'view all rubrics', 'mtable'=>'course', 'field'=>'shortname'),
-    array('module'=>'sampleassessment', 'action'=>'delete rubric', 'mtable'=>'assessment_rubrics', 'field'=>'name'),
-    array('module'=>'sampleassessment', 'action'=>'update grade', 'mtable'=>'sampleassessment', 'field'=>'name'),
+    array('module'=>'sampleassessment', 'action'=>'add sample grade', 'mtable'=>'sampleassessment', 'field'=>'name'),
+    array('module'=>'sampleassessment', 'action'=>'update sample grade', 'mtable'=>'sampleassessment', 'field'=>'name'),
 );

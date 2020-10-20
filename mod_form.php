@@ -80,6 +80,7 @@ class mod_sampleassessment_mod_form extends moodleform_mod {
         $mform->addElement('header', 'submissionuploadfieldset', get_string('sampleupload', 'sampleassessment'));
         
         $mform->addElement('hidden','sampleendindicator','yes');
+        $mform->setType('sampleendindicator', PARAM_TEXT);
 //-------------------------------------------------------------------------------
         /// Adding the "general" fieldset, where all the common settings are showed
         $mform->addElement('header', 'general', get_string('general', 'form'));
@@ -90,6 +91,11 @@ class mod_sampleassessment_mod_form extends moodleform_mod {
 		$mform->addRule('name', null, 'required', null, 'client');
         
         $this->add_intro_editor(true, get_string('assessmentintro', 'sampleassessment'));
+        
+        /// Adding the "samplelabel" field
+        $mform->addElement('text', 'samplelabel', get_string('samplelabel', 'sampleassessment'), array('size'=>'20'));
+		$mform->setType('samplelabel', PARAM_TEXT);
+		$mform->addRule('samplelabel', null, 'required', null, 'client');
         
         // Construct the rubric dropdown list
         $rubricoptions = array();
@@ -186,10 +192,12 @@ class mod_sampleassessment_mod_form extends moodleform_mod {
             $numsubmission = $numoldsubmission;
         }
         
+        if (!isset($default_values['samplelabel']) || !$default_values['samplelabel']) $default_values['samplelabel'] = get_string('sample', 'sampleassessment').' #';
+        
         $counter_copy = $counter;
         for ($i=1; $i<=$numsubmission-$counter_copy; $i++) {
             $counter++;
-            $samplelabel = $mform->createElement('static', 'samplelabel'.$counter, get_string('sample', 'sampleassessment').' '.$counter, '');
+            $sampletitle = $mform->createElement('static', 'sampletitle'.$counter, get_string('sample', 'sampleassessment').' '.$counter, '');
             $samplename = $mform->createElement('text', 'samplename'.$counter, get_string('samplename', 'sampleassessment'));
             
             // Moodle 2.0: file handling changes
@@ -201,12 +209,12 @@ class mod_sampleassessment_mod_form extends moodleform_mod {
             $editoroptions = array('maxfiles' => EDITOR_UNLIMITED_FILES, 'trusttext'=>true, 'context'=>$this->context);
             $sampleintro = $mform->createElement('editor', 'sampleintro'.$counter, get_string('sampleintro', 'sampleassessment'), null, $editoroptions);
             
-            $mform->addElement($samplelabel);
+            $mform->addElement($sampletitle);
             $mform->addElement($samplename);
             $mform->addElement($samplefile);
             $mform->addElement($sampleintro);
             
-            $mform->insertElementBefore($mform->removeElement('samplelabel'.$counter, false), 'sampleendindicator');
+            $mform->insertElementBefore($mform->removeElement('sampletitle'.$counter, false), 'sampleendindicator');
             $mform->insertElementBefore($mform->removeElement('samplename'.$counter, false), 'sampleendindicator');
             $mform->insertElementBefore($mform->removeElement('samplefile'.$counter, false), 'sampleendindicator');
             $mform->insertElementBefore($mform->removeElement('sampleintro'.$counter, false), 'sampleendindicator');
@@ -219,8 +227,8 @@ class mod_sampleassessment_mod_form extends moodleform_mod {
         }
     }
     
-    function validation($data) {
-        $errors= array();
+    function validation($data, $files) {
+        $errors = parent::validation($data, $files);
         
         if ($data['gradestart'] > $data['gradeend']) {
             $errors['gradeend'] = get_string('endearlythanstart', 'sampleassessment');

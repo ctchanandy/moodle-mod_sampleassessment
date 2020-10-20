@@ -5,14 +5,16 @@ var ru = document.getElementById('id_rubricid');
 
 // Allows Rubric & Points select dropdown's to interact
 function updateElem(value, courseid, wwwpath, sesskey){
-    var ob = document.getElementById('id_grade'); // old 'points' grading dropdown
+    var ob = document.getElementById('id_modgrade_type'); // old 'points' grading dropdown
     var i = ru.selectedIndex;
     var l = ru.options.length - 2;
-
-    if (i < l && (!isNumeric(value) || value == 0)) {
-        ob.disabled = false;
-    } else {
-        ob.disabled = true;
+    
+    if (ob !== null) {
+        if (i < l && (!isNumeric(value) || value == 0)) {
+            ob.disabled = false;
+        } else {
+            ob.disabled = true;
+        }
     }
     
     if (value == 'import') {

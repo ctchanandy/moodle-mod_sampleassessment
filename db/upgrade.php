@@ -29,11 +29,28 @@ function xmldb_sampleassessment_upgrade($oldversion) {
     
     $dbman = $DB->get_manager();
     
-    /*
-    if ($oldversion < XXXXXXXXXX) {
-        
+    if ($oldversion < 2013061300) {
+
+        // Define field samplelabel to be added to sampleassessment
+        $table = new xmldb_table('sampleassessment');
+        $field = new xmldb_field('samplelabel', XMLDB_TYPE_CHAR, '20', null, null, null, null, 'numsubmission');
+
+        // Conditionally launch add field samplelabel
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // sampleassessment savepoint reached
+        upgrade_mod_savepoint(true, 2013061300, 'sampleassessment');
     }
-    */
+    
+    if ($oldversion < 2013061301) {
+
+        $DB->set_field_select('sampleassessment', 'samplelabel', get_string('sample', 'sampleassessment'), 'samplelabel IS NULL OR samplelabel = ""');
+
+        // sampleassessment savepoint reached
+        upgrade_mod_savepoint(true, 2013061301, 'sampleassessment');
+    }
     
     return true;
 }

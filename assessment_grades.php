@@ -32,6 +32,8 @@ $a    = optional_param('a', 0, PARAM_INT);           // Assessment ID
 $mode = optional_param('mode', 'all', PARAM_ALPHA);  // What mode are we in?
 $type = optional_param('type', 0, PARAM_INT);
 
+$url = new moodle_url('/mod/sampleassessment/assessment_grades.php');
+
 $marker  = required_param('marker', PARAM_INT);
 $submissionid = required_param('submissionid', PARAM_INT);
 
@@ -45,6 +47,7 @@ if ($id) {
     if (! $course = $DB->get_record("course", array("id"=>$sampleassessment->course))) {
         print_error('coursemisconf', 'sampleassessment');
     }
+    $url->param('id', $id);
 } else {
     if (!$sampleassessment = $DB->get_record("sampleassessment",  array("id"=>$a))) {
         print_error('invalidid', 'sampleassessment');
@@ -55,25 +58,21 @@ if ($id) {
     if (! $cm = get_coursemodule_from_instance("sampleassessment", $sampleassessment->id, $course->id)) {
         print_error('invalidcoursemodule');
     }
+    $url->param('a', $a);
 }
 
 require_login($course->id, false, $cm);
+require_capability('mod/sampleassessment:grade', context_module::instance($cm->id));
 
-require_capability('mod/sampleassessment:grade', get_context_instance(CONTEXT_MODULE, $cm->id));
-
-$url = new moodle_url('/mod/sampleassessment/assessment_grades.php');
-$url->param('id', $id);
-$url->param('a', $a);
 $url->param('mode', $mode);
 $url->param('type', $type);
 $url->param('marker', $marker);
 $url->param('submissionid', $submissionid);
 
-$PAGE->set_url($url);
 $PAGE->set_pagelayout('popup');
+$PAGE->set_url($url);
 
 /// Load up the required sampleassessment code
 $assessmentinstance = new sampleassessment_base($cm->id, $sampleassessment, $cm, $course);
-
 $assessmentinstance->process_sampleassessment_grades($mode, $type, $marker);   // Display or process the submissions
 ?>
